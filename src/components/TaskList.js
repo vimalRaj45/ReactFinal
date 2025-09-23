@@ -1,28 +1,89 @@
-export default function TaskList({ memos, onStatusChange, onRate, showStaff=false }) {
+import {
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Stack,
+  Chip,
+} from "@mui/material";
+
+export default function TaskList({
+  memos,
+  onStatusChange,
+  onRate,
+  showStaff = false,
+}) {
   return (
-    <div>
-      {memos.map(m => (
-        <div key={m.id} className="card p-3 mb-2">
-          <h5>{m.title}</h5>
-          <p>{m.description}</p>
-          <p>Priority: {m.priority} | Skill: {m.skillType}</p>
-          <p>Status: {m.status} | Deadline: {m.deadline}</p>
-          {showStaff && m.staffAssigned && <p>Staff Assigned: {m.staffAssigned.map(s => s.name).join(", ")}</p>}
-          {onStatusChange && (
-            <>
-              {m.status === "Pending" && <button className="btn btn-warning me-2" onClick={() => onStatusChange(m.id, "In Progress")}>Start</button>}
-              {m.status === "In Progress" && <button className="btn btn-success" onClick={() => onStatusChange(m.id, "Completed")}>Complete</button>}
-            </>
-          )}
-          {onRate && (
-            <div className="mt-2">
-              {[1,2,3,4,5].map(star => (
-                <button key={star} className="btn btn-sm btn-outline-warning me-1" onClick={() => onRate(m.id, star)}>{star} ⭐</button>
-              ))}
-            </div>
-          )}
-        </div>
+    <Stack spacing={2}>
+      {memos.map((m) => (
+        <Card key={m.id} variant="outlined" sx={{ p: 2 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              {m.title}
+            </Typography>
+
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {m.description}
+            </Typography>
+
+            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+              <Chip label={`Priority: ${m.priority}`} color="primary" size="small" />
+              <Chip label={`Skill: ${m.skillType}`} color="info" size="small" />
+            </Stack>
+
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              Status: {m.status} | Deadline: {m.deadline}
+            </Typography>
+
+            {showStaff && m.staffAssigned && (
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                Staff Assigned: {m.staffAssigned.map((s) => s.name).join(", ")}
+              </Typography>
+            )}
+
+            {onStatusChange && (
+              <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                {m.status === "Pending" && (
+                  <Button
+                    variant="contained"
+                    color="warning"
+                    size="small"
+                    onClick={() => onStatusChange(m.id, "In Progress")}
+                  >
+                    Start
+                  </Button>
+                )}
+                {m.status === "In Progress" && (
+                  <Button
+                    variant="contained"
+                    color="success"
+                    size="small"
+                    onClick={() => onStatusChange(m.id, "Completed")}
+                  >
+                    Complete
+                  </Button>
+                )}
+              </Stack>
+            )}
+
+            {onRate && (
+              <Stack direction="row" spacing={1}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Button
+                    key={star}
+                    variant="outlined"
+                    color="warning"
+                    size="small"
+                    onClick={() => onRate(m.id, star)}
+                  >
+                    {star} ⭐
+                  </Button>
+                ))}
+              </Stack>
+            )}
+          </CardContent>
+        </Card>
       ))}
-    </div>
+    </Stack>
   );
 }

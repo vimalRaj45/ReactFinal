@@ -83,9 +83,11 @@
       "password": "1234",
       "role": "Staff",
       "name": "Neurology Staff B",
-      "points": 0,
-      "rating": 0,
-      "badges": [],
+      "points": 45,
+      "rating": 5,
+      "badges": [
+        "Welldone"
+      ],
       "department": "Neurology"
     },
     {
@@ -206,9 +208,11 @@
           "password": "1234",
           "role": "Staff",
           "name": "Neurology Staff B",
-          "points": 0,
-          "rating": 0,
-          "badges": [],
+          "points": 45,
+          "rating": 5,
+          "badges": [
+            "Welldone"
+          ],
           "department": "Neurology",
           "status": "Completed",
           "proof": [
@@ -220,6 +224,39 @@
         }
       ],
       "adminVerified": true
+    },
+    {
+      "id": "47ed",
+      "title": "for test",
+      "description": "desc",
+      "skillType": "minimum",
+      "priority": "Medium",
+      "deadline": "2025-09-21",
+      "assignedTo": "4",
+      "status": "Completed",
+      "staffAssigned": [
+        {
+          "id": "9",
+          "email": "staff5@hospital.com",
+          "password": "1234",
+          "role": "Staff",
+          "name": "Orthopedics Staff A",
+          "points": 45,
+          "rating": 45,
+          "badges": [
+            "45"
+          ],
+          "department": "Orthopedics",
+          "status": "Completed",
+          "proof": [
+            "dxil.dll"
+          ],
+          "comments": [
+            "on going process"
+          ]
+        }
+      ],
+      "adminVerified": false
     }
   ],
   "notifications": [
@@ -228,7 +265,7 @@
       "userId": "3",
       "message": "New memo assigned: new added ",
       "timestamp": "2025-09-23T14:00:39.927Z",
-      "read": false
+      "read": true
     },
     {
       "id": "462f",
@@ -242,14 +279,14 @@
       "userId": "3",
       "message": "Neurology Staff A updated task \"new added \" to In Progress",
       "timestamp": "2025-09-23T15:01:16.174Z",
-      "read": false
+      "read": true
     },
     {
       "id": "c601",
       "userId": "3",
       "message": "Neurology Staff A updated task \"new added \" to Completed",
       "timestamp": "2025-09-23T15:24:06.327Z",
-      "read": false
+      "read": true
     },
     {
       "id": "fc54",
@@ -263,7 +300,7 @@
       "userId": "4",
       "message": "New memo assigned: New2",
       "timestamp": "2025-09-23T16:00:08.512Z",
-      "read": false
+      "read": true
     },
     {
       "id": "6ce8",
@@ -284,28 +321,28 @@
       "userId": "9",
       "message": "Your task \"New2\" has been verified by Dept Head",
       "timestamp": "2025-09-23T16:04:45.180Z",
-      "read": false
+      "read": true
     },
     {
       "id": "bf54",
       "userId": "9",
       "message": "Admin has verified task \"New2\"",
       "timestamp": "2025-09-23T16:05:18.991Z",
-      "read": false
+      "read": true
     },
     {
       "id": "5d8c",
       "userId": "9",
       "message": "Your task \"New2\" has been evaluated by Dept Head. Points: 45, Rating: 45, Badges: 45",
       "timestamp": "2025-09-23T16:15:49.084Z",
-      "read": false
+      "read": true
     },
     {
       "id": "1d37",
       "userId": "3",
       "message": "New memo assigned: blood camp",
       "timestamp": "2025-09-23T16:23:20.108Z",
-      "read": false
+      "read": true
     },
     {
       "id": "530a",
@@ -348,6 +385,34 @@
       "message": "Admin has verified task \"new added \"",
       "timestamp": "2025-09-23T17:16:37.140Z",
       "read": true
+    },
+    {
+      "id": "e265",
+      "userId": "4",
+      "message": "New memo assigned: for test",
+      "timestamp": "2025-09-23T19:53:49.252Z",
+      "read": false
+    },
+    {
+      "id": "14fc",
+      "userId": "9",
+      "message": "You have been assigned a new task: \"for test\"",
+      "timestamp": "2025-09-23T19:54:38.175Z",
+      "read": true
+    },
+    {
+      "id": "316a",
+      "userId": "4",
+      "message": "Orthopedics Staff A updated task \"for test\" to Completed",
+      "timestamp": "2025-09-23T19:55:46.762Z",
+      "read": false
+    },
+    {
+      "id": "0e6b",
+      "userId": "8",
+      "message": "Your task \"blood camp\" has been evaluated. Points: 45, Rating: 5",
+      "timestamp": "2025-09-23T20:18:34.214Z",
+      "read": false
     }
   ]
 }

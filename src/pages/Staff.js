@@ -2,82 +2,174 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { getMemos, updateMemo, sendNotification, getUsers } from "../services/api";
 import { Link } from "react-router-dom";
+import {
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  Stack,
+  Grid,
+  Box,
+  Chip,
+  Avatar,
+  LinearProgress,
+  Divider,
+  IconButton,
+  Badge,
+  Tabs,
+  Tab,
+  Paper,
+  Alert,
+  CircularProgress,
+  CardActions,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
+import {
+  Task,
+  Notifications,
+  Assessment,
+  EmojiEvents,
+  Star,
+  UploadFile,
+  Comment,
+  Schedule,
+  PriorityHigh,
+  Person,
+  CheckCircle,
+  Pending,
+  Download,
+  Delete,
+  Add,
+  Refresh,
+} from "@mui/icons-material";
+
+function TabPanel({ children, value, index, ...other }) {
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`tabpanel-${index}`}
+      aria-labelledby={`tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
+    </div>
+  );
+}
 
 export default function Staff() {
   const [memos, setMemos] = useState([]);
   const [users, setUsers] = useState([]);
   const [comment, setComment] = useState("");
-  const [proofFile, setProofFile] = useState(null);
+  const [proofFiles, setProofFiles] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const [comments, setComments] = useState({});
 
-  const user = JSON.parse(localStorage.getItem("user")); // Logged-in Staff
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
-    const memosRes = await getMemos();
-    const usersRes = await getUsers();
+    setLoading(true);
+    try {
+      const [memosRes, usersRes] = await Promise.all([getMemos(), getUsers()]);
+      
+      const staffMemos = memosRes.data.filter((memo) =>
+        memo.staffAssigned?.some((s) => s.id === user.id)
+      );
 
-    // Filter memos assigned to this staff
-    const staffMemos = memosRes.data.filter((memo) =>
-      memo.staffAssigned.some((s) => s.id === user.id)
-    );
-
-    setMemos(staffMemos);
-    setUsers(usersRes.data);
+      setMemos(staffMemos);
+      setUsers(usersRes.data);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUpdateTask = async (memo) => {
-    const updatedStaff = memo.staffAssigned.map((s) => {
-      if (s.id === user.id) {
-        return {
-          ...s,
-          status: "Completed",
-          proof: proofFile ? [...(s.proof || []), proofFile.name] : s.proof || [],
-          comments: comment ? [...(s.comments || []), comment] : s.comments || [],
-        };
-      }
-      return s;
-    });
+    const taskComment = comments[memo.id] || "";
+    const file = proofFiles[memo.id];
 
-    await updateMemo(memo.id, {
-      staffAssigned: updatedStaff,
-      status: "Completed",
-    });
+    try {
+      const updatedStaff = memo.staffAssigned.map((s) => {
+        if (s.id === user.id) {
+          return {
+            ...s,
+            status: "Completed",
+            proof: file ? [...(s.proof || []), { name: file.name, date: new Date().toISOString() }] : s.proof || [],
+            comments: taskComment ? [...(s.comments || []), { text: taskComment, date: new Date().toISOString() }] : s.comments || [],
+            completedAt: new Date().toISOString(),
+          };
+        }
+        return s;
+      });
 
-    // Notify Dept Head
-    sendNotification(
-      memo.assignedTo,
-      `${user.name} updated task "${memo.title}" to Completed`
-    );
+      await updateMemo(memo.id, {
+        staffAssigned: updatedStaff,
+        status: "Completed",
+      });
 
-    setComment("");
-    setProofFile(null);
-    loadData();
+      // Notify Dept Head
+      await sendNotification(
+        memo.assignedTo,
+        `${user.name} completed task: "${memo.title}"`
+      );
+
+      // Clear inputs for this memo
+      setComments(prev => ({ ...prev, [memo.id]: "" }));
+      setProofFiles(prev => ({ ...prev, [memo.id]: null }));
+      
+      loadData();
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
   };
 
-  // Overall evaluation calculation
+  const handleFileUpload = (memoId, event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setProofFiles(prev => ({ ...prev, [memoId]: file }));
+    }
+  };
+
+  const removeFile = (memoId) => {
+    setProofFiles(prev => ({ ...prev, [memoId]: null }));
+  };
+
   const calculateOverallEvaluation = () => {
     let totalPoints = 0,
       totalRating = 0,
       badgeList = [];
     let taskCount = 0;
+    let completedTasks = 0;
 
     memos.forEach((memo) => {
-      const myTask = memo.staffAssigned.find((s) => s.id === user.id);
+      const myTask = memo.staffAssigned?.find((s) => s.id === user.id);
       if (myTask) {
         if (myTask.points) totalPoints += Number(myTask.points);
         if (myTask.rating) totalRating += Number(myTask.rating);
         if (myTask.badges) badgeList = [...badgeList, ...myTask.badges];
         taskCount++;
+        if (myTask.status === "Completed") completedTasks++;
       }
     });
 
     return {
-      avgPoints: taskCount ? (totalPoints / taskCount).toFixed(2) : 0,
-      avgRating: taskCount ? (totalRating / taskCount).toFixed(2) : 0,
+      avgPoints: taskCount ? (totalPoints / taskCount).toFixed(1) : 0,
+      avgRating: taskCount ? (totalRating / taskCount).toFixed(1) : 0,
       badges: [...new Set(badgeList)],
+      completedTasks,
+      totalTasks: taskCount,
+      completionRate: taskCount ? Math.round((completedTasks / taskCount) * 100) : 0,
     };
   };
 
@@ -88,93 +180,483 @@ export default function Staff() {
     return u ? u.name : "Unknown";
   };
 
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "High": return "error";
+      case "Medium": return "warning";
+      case "Low": return "success";
+      default: return "default";
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Completed": return "success";
+      case "In Progress": return "info";
+      default: return "default";
+    }
+  };
+
+  const pendingTasks = memos.filter(memo => {
+    const myTask = memo.staffAssigned?.find((s) => s.id === user.id);
+    return myTask?.status !== "Completed";
+  });
+
+  const completedTasks = memos.filter(memo => {
+    const myTask = memo.staffAssigned?.find((s) => s.id === user.id);
+    return myTask?.status === "Completed";
+  });
+
   return (
     <>
       <Navbar />
-      <div className="container mt-4">
-        <h2>{user.department} Staff Panel</h2>
-        <Link to="/notifications" className="btn btn-outline-secondary mb-3">
-          🔔 Notifications
-        </Link>
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        {/* Header */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+              Staff Dashboard
+            </Typography>
+            <Typography variant="h6" color="text.secondary">
+              {user.department} Department • Welcome, {user.name}
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="outlined"
+              startIcon={<Refresh />}
+              onClick={loadData}
+              disabled={loading}
+            >
+              Refresh
+            </Button>
+            <Badge badgeContent={pendingTasks.length} color="error">
+              <Button
+                variant="contained"
+                component={Link}
+                to="/notifications"
+                startIcon={<Notifications />}
+              >
+                Notifications
+              </Button>
+            </Badge>
+          </Box>
+        </Box>
 
-        {/* Overall Evaluation */}
-        <div className="card p-3 mb-4 shadow-sm bg-light">
-          <h5>📊 Overall Evaluation</h5>
-          <p><strong>Average Points:</strong> {overall.avgPoints}</p>
-          <p><strong>Average Rating:</strong> {overall.avgRating}</p>
-          <p><strong>Badges Earned:</strong> {overall.badges.join(", ") || "None"}</p>
-        </div>
+        {/* Performance Overview */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={2}>
+            <Card elevation={2} sx={{ textAlign: 'center', p: 2 }}>
+              <Task sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+              <Typography variant="h5" fontWeight="bold">
+                {overall.totalTasks}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Tasks
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2}>
+            <Card elevation={2} sx={{ textAlign: 'center', p: 2 }}>
+              <CheckCircle sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
+              <Typography variant="h5" fontWeight="bold" color="success.main">
+                {overall.completedTasks}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Completed
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2}>
+            <Card elevation={2} sx={{ textAlign: 'center', p: 2 }}>
+              <EmojiEvents sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
+              <Typography variant="h5" fontWeight="bold" color="warning.main">
+                {overall.avgPoints}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Avg Points
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2}>
+            <Card elevation={2} sx={{ textAlign: 'center', p: 2 }}>
+              <Star sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
+              <Typography variant="h5" fontWeight="bold" color="info.main">
+                {overall.avgRating}/5
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Avg Rating
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2}>
+            <Card elevation={2} sx={{ textAlign: 'center', p: 2 }}>
+              <Assessment sx={{ fontSize: 40, color: 'secondary.main', mb: 1 }} />
+              <Typography variant="h5" fontWeight="bold" color="secondary.main">
+                {overall.completionRate}%
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Completion Rate
+              </Typography>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2}>
+            <Card elevation={2} sx={{ textAlign: 'center', p: 2 }}>
+              <EmojiEvents sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
+              <Typography variant="h5" fontWeight="bold" color="success.main">
+                {overall.badges.length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Badges Earned
+              </Typography>
+            </Card>
+          </Grid>
+        </Grid>
 
-        {memos.length === 0 && <p>No tasks assigned yet.</p>}
+        {/* Badges Display */}
+        {overall.badges.length > 0 && (
+          <Card sx={{ mb: 4, p: 3 }} elevation={2}>
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <EmojiEvents /> Earned Badges
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              {overall.badges.map((badge, index) => (
+                <Chip
+                  key={index}
+                  label={badge}
+                  color="primary"
+                  variant="outlined"
+                  icon={<EmojiEvents />}
+                />
+              ))}
+            </Box>
+          </Card>
+        )}
 
-        {memos.map((memo) => {
-          const myTask = memo.staffAssigned.find((s) => s.id === user.id);
-          return (
-            <div key={memo.id} className="card p-3 mb-3 shadow-sm">
-              <h5>{memo.title}</h5>
-              <p>{memo.description}</p>
-              <p>
-                <strong>Status:</strong> {myTask.status || "Pending"}
-              </p>
-              <p>
-                <strong>Priority:</strong> {memo.priority} |{" "}
-                <strong>Deadline:</strong> {memo.deadline}
-              </p>
-              <p>
-                <strong>Task By:</strong> {getUserNameById(memo.assignedTo)}
-              </p>
+        {/* Tabs */}
+        <Card elevation={2}>
+          <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+            <Tab icon={<Task />} label={`All Tasks (${memos.length})`} />
+            <Tab icon={<Pending />} label={`Pending (${pendingTasks.length})`} />
+            <Tab icon={<CheckCircle />} label={`Completed (${completedTasks.length})`} />
+          </Tabs>
 
-              {/* Update Section */}
-              {myTask.status !== "Completed" && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Add comment"
-                    className="form-control mb-2"
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                  />
-                  <input
-                    type="file"
-                    className="form-control mb-2"
-                    onChange={(e) => setProofFile(e.target.files[0])}
-                  />
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => handleUpdateTask(memo)}
-                  >
-                    Mark Completed
-                  </button>
-                </>
-              )}
-
-              {/* Show Comments & Proof */}
-              {myTask.comments?.length > 0 && (
-                <p>
-                  <strong>Comments:</strong> {(myTask.comments || []).join(", ")}
-                </p>
-              )}
-              {myTask.proof?.length > 0 && (
-                <p>
-                  <strong>Proof:</strong> {(myTask.proof || []).join(", ")}
-                </p>
-              )}
-
-              {/* Evaluation */}
-              {myTask.points > 0 || myTask.rating > 0 || (myTask.badges?.length > 0) ? (
-                <div className="mt-3 p-2 border rounded bg-light">
-                  <h6>Evaluation:</h6>
-                  <p><strong>Points:</strong> {myTask.points || 0}</p>
-                  <p><strong>Rating:</strong> {myTask.rating || 0}</p>
-                  <p><strong>Badges:</strong> {(myTask.badges || []).join(", ") || "None"}</p>
-                </div>
-              ) : (
-                <p className="text-muted">No evaluation yet.</p>
-              )}
-            </div>
-          );
-        })}
-      </div>
+          <TabPanel value={activeTab} index={0}>
+            <TaskList 
+              memos={memos} 
+              loading={loading}
+              user={user}
+              users={users}
+              comments={comments}
+              setComments={setComments}
+              proofFiles={proofFiles}
+              handleFileUpload={handleFileUpload}
+              removeFile={removeFile}
+              handleUpdateTask={handleUpdateTask}
+              getUserNameById={getUserNameById}
+              getPriorityColor={getPriorityColor}
+              getStatusColor={getStatusColor}
+            />
+          </TabPanel>
+          <TabPanel value={activeTab} index={1}>
+            <TaskList 
+              memos={pendingTasks} 
+              loading={loading}
+              user={user}
+              users={users}
+              comments={comments}
+              setComments={setComments}
+              proofFiles={proofFiles}
+              handleFileUpload={handleFileUpload}
+              removeFile={removeFile}
+              handleUpdateTask={handleUpdateTask}
+              getUserNameById={getUserNameById}
+              getPriorityColor={getPriorityColor}
+              getStatusColor={getStatusColor}
+            />
+          </TabPanel>
+          <TabPanel value={activeTab} index={2}>
+            <TaskList 
+              memos={completedTasks} 
+              loading={loading}
+              user={user}
+              users={users}
+              comments={comments}
+              setComments={setComments}
+              proofFiles={proofFiles}
+              handleFileUpload={handleFileUpload}
+              removeFile={removeFile}
+              handleUpdateTask={handleUpdateTask}
+              getUserNameById={getUserNameById}
+              getPriorityColor={getPriorityColor}
+              getStatusColor={getStatusColor}
+            />
+          </TabPanel>
+        </Card>
+      </Container>
     </>
+  );
+}
+
+function TaskList({ 
+  memos, 
+  loading, 
+  user, 
+  users, 
+  comments, 
+  setComments, 
+  proofFiles, 
+  handleFileUpload, 
+  removeFile, 
+  handleUpdateTask, 
+  getUserNameById,
+  getPriorityColor,
+  getStatusColor 
+}) {
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (memos.length === 0) {
+    return (
+      <Alert severity="info" sx={{ m: 2 }}>
+        No tasks found in this category.
+      </Alert>
+    );
+  }
+
+  return (
+    <Stack spacing={3}>
+      {memos.map((memo) => {
+        const myTask = memo.staffAssigned?.find((s) => s.id === user.id);
+        const isCompleted = myTask?.status === "Completed";
+        
+        return (
+          <Card key={memo.id} elevation={1} sx={{ '&:hover': { boxShadow: 4 } }}>
+            <CardContent>
+              {/* Task Header */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h6" gutterBottom>
+                    {memo.title}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+                    <Chip 
+                      icon={<PriorityHigh />}
+                      label={memo.priority || "Not Set"} 
+                      size="small"
+                      color={getPriorityColor(memo.priority)}
+                    />
+                    <Chip 
+                      icon={isCompleted ? <CheckCircle /> : <Pending />}
+                      label={myTask?.status || "Pending"} 
+                      size="small"
+                      color={getStatusColor(myTask?.status)}
+                    />
+                    {memo.skillType && (
+                      <Chip label={memo.skillType} size="small" variant="outlined" />
+                    )}
+                  </Box>
+                </Box>
+                {isCompleted && myTask?.completedAt && (
+                  <Chip 
+                    label={`Completed: ${new Date(myTask.completedAt).toLocaleDateString()}`}
+                    color="success"
+                    variant="outlined"
+                    size="small"
+                  />
+                )}
+              </Box>
+
+              {/* Task Description */}
+              <Typography variant="body2" color="text.secondary" paragraph>
+                {memo.description}
+              </Typography>
+
+              {/* Task Details */}
+              <Grid container spacing={2} sx={{ mb: 2 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Schedule fontSize="small" color="action" />
+                    <Typography variant="body2">
+                      <strong>Deadline:</strong> {memo.deadline ? new Date(memo.deadline).toLocaleDateString() : "Not set"}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Person fontSize="small" color="action" />
+                    <Typography variant="body2">
+                      <strong>Assigned by:</strong> {getUserNameById(memo.assignedTo)}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Assessment fontSize="small" color="action" />
+                    <Typography variant="body2">
+                      <strong>Dept Verified:</strong> {memo.status === "Verified" ? "Yes" : "No"}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CheckCircle fontSize="small" color="action" />
+                    <Typography variant="body2">
+                      <strong>Admin Verified:</strong> {memo.adminVerified ? "Yes" : "No"}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ my: 2 }} />
+
+              {/* Update Section for Pending Tasks */}
+              {!isCompleted && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Add /> Update Task Progress
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <TextField
+                        label="Add Comment"
+                        value={comments[memo.id] || ""}
+                        onChange={(e) => setComments(prev => ({ ...prev, [memo.id]: e.target.value }))}
+                        fullWidth
+                        multiline
+                        rows={2}
+                        placeholder="Describe your progress or any issues..."
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Button
+                          variant="outlined"
+                          component="label"
+                          startIcon={<UploadFile />}
+                          size="small"
+                        >
+                          Upload Proof
+                          <input
+                            type="file"
+                            hidden
+                            onChange={(e) => handleFileUpload(memo.id, e)}
+                          />
+                        </Button>
+                        {proofFiles[memo.id] && (
+                          <Chip
+                            label={proofFiles[memo.id].name}
+                            onDelete={() => removeFile(memo.id)}
+                            deleteIcon={<Delete />}
+                            variant="outlined"
+                          />
+                        )}
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Button
+                        variant="contained"
+                        startIcon={<CheckCircle />}
+                        onClick={() => handleUpdateTask(memo)}
+                        disabled={!comments[memo.id] && !proofFiles[memo.id]}
+                      >
+                        Mark as Completed
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Box>
+              )}
+
+              {/* Task History */}
+              {(myTask?.comments?.length > 0 || myTask?.proof?.length > 0) && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Comment /> Task History
+                  </Typography>
+                  <List dense>
+                    {myTask.comments?.map((comment, index) => (
+                      <ListItem key={index}>
+                        <ListItemIcon>
+                          <Comment color="action" />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary={comment.text} 
+                          secondary={comment.date ? new Date(comment.date).toLocaleString() : ''}
+                        />
+                      </ListItem>
+                    ))}
+                    {myTask.proof?.map((proof, index) => (
+                      <ListItem key={index}>
+                        <ListItemIcon>
+                          <UploadFile color="action" />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary={proof.name} 
+                          secondary={proof.date ? new Date(proof.date).toLocaleString() : ''}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+              )}
+
+              {/* Evaluation Section */}
+              {isCompleted && (myTask?.points > 0 || myTask?.rating > 0 || myTask?.badges?.length > 0) && (
+                <Paper variant="outlined" sx={{ p: 2, backgroundColor: 'success.50' }}>
+                  <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Assessment /> Evaluation Results
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {myTask.points > 0 && (
+                      <Grid item xs={12} sm={4}>
+                        <Box sx={{ textAlign: 'center' }}>
+                          <Typography variant="h6" color="warning.main">
+                            {myTask.points}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Points Earned
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    )}
+                    {myTask.rating > 0 && (
+                      <Grid item xs={12} sm={4}>
+                        <Box sx={{ textAlign: 'center' }}>
+                          <Typography variant="h6" color="primary.main">
+                            {myTask.rating}/5
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Performance Rating
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    )}
+                    {myTask.badges?.length > 0 && (
+                      <Grid item xs={12} sm={4}>
+                        <Box>
+                          <Typography variant="body2" gutterBottom>
+                            <strong>Badges:</strong>
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                            {myTask.badges.map((badge, index) => (
+                              <Chip key={index} label={badge} size="small" />
+                            ))}
+                          </Box>
+                        </Box>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Paper>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
+    </Stack>
   );
 }
