@@ -1,0 +1,353 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "email": "admin@hospital.com",
+      "password": "1234",
+      "role": "Admin",
+      "name": "HR Manager",
+      "points": 0,
+      "rating": 0,
+      "badges": [],
+      "department": ""
+    },
+    {
+      "id": "2",
+      "email": "head-cardiology@hospital.com",
+      "password": "1234",
+      "role": "Head",
+      "name": "Cardiology Head",
+      "points": 0,
+      "rating": 0,
+      "badges": [],
+      "department": "Cardiology"
+    },
+    {
+      "id": "3",
+      "email": "head-neuro@hospital.com",
+      "password": "1234",
+      "role": "Head",
+      "name": "Neurology Head",
+      "points": 0,
+      "rating": 0,
+      "badges": [],
+      "department": "Neurology"
+    },
+    {
+      "id": "4",
+      "email": "head-ortho@hospital.com",
+      "password": "1234",
+      "role": "Head",
+      "name": "Orthopedics Head",
+      "points": 0,
+      "rating": 0,
+      "badges": [],
+      "department": "Orthopedics"
+    },
+    {
+      "id": "5",
+      "email": "staff1@hospital.com",
+      "password": "1234",
+      "role": "Staff",
+      "name": "Cardiology Staff A",
+      "points": 0,
+      "rating": 0,
+      "badges": [],
+      "department": "Cardiology"
+    },
+    {
+      "id": "6",
+      "email": "staff2@hospital.com",
+      "password": "1234",
+      "role": "Staff",
+      "name": "Cardiology Staff B",
+      "points": 0,
+      "rating": 0,
+      "badges": [],
+      "department": "Cardiology"
+    },
+    {
+      "id": "7",
+      "email": "staff3@hospital.com",
+      "password": "1234",
+      "role": "Staff",
+      "name": "Neurology Staff A",
+      "points": 0,
+      "rating": 0,
+      "badges": [],
+      "department": "Neurology"
+    },
+    {
+      "id": "8",
+      "email": "staff4@hospital.com",
+      "password": "1234",
+      "role": "Staff",
+      "name": "Neurology Staff B",
+      "points": 0,
+      "rating": 0,
+      "badges": [],
+      "department": "Neurology"
+    },
+    {
+      "id": "9",
+      "email": "staff5@hospital.com",
+      "password": "1234",
+      "role": "Staff",
+      "name": "Orthopedics Staff A",
+      "points": 45,
+      "rating": 45,
+      "badges": [
+        "45"
+      ],
+      "department": "Orthopedics"
+    },
+    {
+      "id": "10",
+      "email": "staff6@hospital.com",
+      "password": "1234",
+      "role": "Staff",
+      "name": "Orthopedics Staff B",
+      "points": 0,
+      "rating": 0,
+      "badges": [],
+      "department": "Orthopedics"
+    }
+  ],
+  "memos": [
+    {
+      "id": "f7d5",
+      "title": "new added ",
+      "description": "fully",
+      "skillType": "low",
+      "priority": "Medium",
+      "deadline": "2025-09-20",
+      "assignedTo": "3",
+      "status": "Verified",
+      "staffAssigned": [
+        {
+          "id": "7",
+          "email": "staff3@hospital.com",
+          "password": "1234",
+          "role": "Staff",
+          "name": "Neurology Staff A",
+          "points": 30,
+          "rating": 12,
+          "badges": [
+            "1",
+            "2",
+            "3"
+          ],
+          "department": "Neurology",
+          "status": "Completed",
+          "proof": [
+            "Hospital_Memo_Task_Management_SRS.pdf"
+          ],
+          "comments": [
+            "hello"
+          ]
+        }
+      ],
+      "rating": 0,
+      "pointsAssigned": 0,
+      "comments": [],
+      "proof": [],
+      "adminVerified": true
+    },
+    {
+      "id": "501b",
+      "title": "New2",
+      "description": "do it fast",
+      "skillType": "medim",
+      "priority": "Medium",
+      "deadline": "2025-09-20",
+      "assignedTo": "4",
+      "status": "Verified",
+      "staffAssigned": [
+        {
+          "id": "9",
+          "email": "staff5@hospital.com",
+          "password": "1234",
+          "role": "Staff",
+          "name": "Orthopedics Staff A",
+          "points": 45,
+          "rating": 45,
+          "badges": [
+            "45"
+          ],
+          "department": "Orthopedics",
+          "status": "Completed",
+          "proof": [
+            "Hospital_Memo_Task_Management_SRS.pdf"
+          ],
+          "comments": [
+            "completed"
+          ]
+        }
+      ],
+      "rating": 0,
+      "pointsAssigned": 0,
+      "comments": [],
+      "proof": [],
+      "adminVerified": true
+    },
+    {
+      "id": "b57e",
+      "title": "blood camp",
+      "description": "tom",
+      "skillType": "high",
+      "priority": "High",
+      "deadline": "2025-09-20",
+      "assignedTo": "3",
+      "status": "Verified",
+      "staffAssigned": [
+        {
+          "id": "8",
+          "email": "staff4@hospital.com",
+          "password": "1234",
+          "role": "Staff",
+          "name": "Neurology Staff B",
+          "points": 0,
+          "rating": 0,
+          "badges": [],
+          "department": "Neurology",
+          "status": "Completed",
+          "proof": [
+            "Spirelia-biz-req.pdf"
+          ],
+          "comments": [
+            "i completed"
+          ]
+        }
+      ],
+      "adminVerified": true
+    }
+  ],
+  "notifications": [
+    {
+      "id": "4177",
+      "userId": "3",
+      "message": "New memo assigned: new added ",
+      "timestamp": "2025-09-23T14:00:39.927Z",
+      "read": false
+    },
+    {
+      "id": "462f",
+      "userId": "7",
+      "message": "You have been assigned a new task: \"new added \"",
+      "timestamp": "2025-09-23T14:16:06.760Z",
+      "read": true
+    },
+    {
+      "id": "d14c",
+      "userId": "3",
+      "message": "Neurology Staff A updated task \"new added \" to In Progress",
+      "timestamp": "2025-09-23T15:01:16.174Z",
+      "read": false
+    },
+    {
+      "id": "c601",
+      "userId": "3",
+      "message": "Neurology Staff A updated task \"new added \" to Completed",
+      "timestamp": "2025-09-23T15:24:06.327Z",
+      "read": false
+    },
+    {
+      "id": "fc54",
+      "userId": "7",
+      "message": "Your task \"new added \" has been evaluated by Dept Head. Points: 30, Rating: 12, Badges: 1, 2, 3",
+      "timestamp": "2025-09-23T15:36:59.082Z",
+      "read": true
+    },
+    {
+      "id": "5a0e",
+      "userId": "4",
+      "message": "New memo assigned: New2",
+      "timestamp": "2025-09-23T16:00:08.512Z",
+      "read": false
+    },
+    {
+      "id": "6ce8",
+      "userId": "9",
+      "message": "You have been assigned a new task: \"New2\"",
+      "timestamp": "2025-09-23T16:00:33.444Z",
+      "read": true
+    },
+    {
+      "id": "6b5d",
+      "userId": "4",
+      "message": "Orthopedics Staff A updated task \"New2\" to Completed",
+      "timestamp": "2025-09-23T16:04:19.214Z",
+      "read": false
+    },
+    {
+      "id": "bccb",
+      "userId": "9",
+      "message": "Your task \"New2\" has been verified by Dept Head",
+      "timestamp": "2025-09-23T16:04:45.180Z",
+      "read": false
+    },
+    {
+      "id": "bf54",
+      "userId": "9",
+      "message": "Admin has verified task \"New2\"",
+      "timestamp": "2025-09-23T16:05:18.991Z",
+      "read": false
+    },
+    {
+      "id": "5d8c",
+      "userId": "9",
+      "message": "Your task \"New2\" has been evaluated by Dept Head. Points: 45, Rating: 45, Badges: 45",
+      "timestamp": "2025-09-23T16:15:49.084Z",
+      "read": false
+    },
+    {
+      "id": "1d37",
+      "userId": "3",
+      "message": "New memo assigned: blood camp",
+      "timestamp": "2025-09-23T16:23:20.108Z",
+      "read": false
+    },
+    {
+      "id": "530a",
+      "userId": "8",
+      "message": "You have been assigned a new task: \"blood camp\"",
+      "timestamp": "2025-09-23T16:24:33.789Z",
+      "read": true
+    },
+    {
+      "id": "7d77",
+      "userId": "3",
+      "message": "Neurology Staff B updated task \"blood camp\" to Completed",
+      "timestamp": "2025-09-23T16:25:22.020Z",
+      "read": true
+    },
+    {
+      "id": "db3f",
+      "userId": "8",
+      "message": "Your task \"blood camp\" has been verified by Dept Head",
+      "timestamp": "2025-09-23T16:26:27.043Z",
+      "read": true
+    },
+    {
+      "id": "91ed",
+      "userId": "8",
+      "message": "Admin has verified task \"blood camp\"",
+      "timestamp": "2025-09-23T16:26:58.607Z",
+      "read": true
+    },
+    {
+      "id": "1f97",
+      "userId": "7",
+      "message": "Your task \"new added \" has been verified by Dept Head",
+      "timestamp": "2025-09-23T17:16:10.269Z",
+      "read": false
+    },
+    {
+      "id": "2edf",
+      "userId": "7",
+      "message": "Admin has verified task \"new added \"",
+      "timestamp": "2025-09-23T17:16:37.140Z",
+      "read": true
+    }
+  ]
+}
