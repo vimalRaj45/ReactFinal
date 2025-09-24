@@ -70,6 +70,7 @@ export default function Staff() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [comments, setComments] = useState({});
+  const timestamp = new Date().toLocaleString();
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -118,11 +119,15 @@ export default function Staff() {
         status: "Completed",
       });
 
-      // Notify Dept Head
-      await sendNotification(
-        memo.assignedTo,
-        `${user.name} completed task: "${memo.title}"`
-      );
+    await sendNotification(
+  "1",
+  `Action: Task Completed
+Sender: Staff ${user.name} (ID: ${user.id})
+Task: "${memo.title}" (ID: ${memo.id})
+Dept Head: ${users.find(u => u.id === memo.assignedTo)?.name || memo.assignedTo}
+Department: ${user.department}
+Date & Time: ${timestamp}`
+);
 
       // Clear inputs for this memo
       setComments(prev => ({ ...prev, [memo.id]: "" }));
@@ -222,14 +227,6 @@ export default function Staff() {
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              variant="outlined"
-              startIcon={<Refresh />}
-              onClick={loadData}
-              disabled={loading}
-            >
-              Refresh
-            </Button>
             <Badge badgeContent={pendingTasks.length} color="error">
               <Button
                 variant="contained"
@@ -244,74 +241,39 @@ export default function Staff() {
         </Box>
 
         {/* Performance Overview */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={2}>
-            <Card elevation={2} sx={{ textAlign: 'center', p: 2 }}>
-              <Task sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-              <Typography variant="h5" fontWeight="bold">
-                {overall.totalTasks}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Tasks
-              </Typography>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={2}>
-            <Card elevation={2} sx={{ textAlign: 'center', p: 2 }}>
-              <CheckCircle sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-              <Typography variant="h5" fontWeight="bold" color="success.main">
-                {overall.completedTasks}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Completed
-              </Typography>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={2}>
-            <Card elevation={2} sx={{ textAlign: 'center', p: 2 }}>
-              <EmojiEvents sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
-              <Typography variant="h5" fontWeight="bold" color="warning.main">
-                {overall.avgPoints}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Avg Points
-              </Typography>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={2}>
-            <Card elevation={2} sx={{ textAlign: 'center', p: 2 }}>
-              <Star sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
-              <Typography variant="h5" fontWeight="bold" color="info.main">
-                {overall.avgRating}/5
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Avg Rating
-              </Typography>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={2}>
-            <Card elevation={2} sx={{ textAlign: 'center', p: 2 }}>
-              <Assessment sx={{ fontSize: 40, color: 'secondary.main', mb: 1 }} />
-              <Typography variant="h5" fontWeight="bold" color="secondary.main">
-                {overall.completionRate}%
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Completion Rate
-              </Typography>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={2}>
-            <Card elevation={2} sx={{ textAlign: 'center', p: 2 }}>
-              <EmojiEvents sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-              <Typography variant="h5" fontWeight="bold" color="success.main">
-                {overall.badges.length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Badges Earned
-              </Typography>
-            </Card>
-          </Grid>
-        </Grid>
+<Grid container spacing={2} sx={{ mb: 4, justifyContent: "center" }}>
+  {[
+    { icon: <Task sx={{ fontSize: 32, color: "primary.main" }} />, value: overall.totalTasks, label: "Total Tasks" },
+    { icon: <CheckCircle sx={{ fontSize: 32, color: "success.main" }} />, value: overall.completedTasks, label: "Completed", color: "success.main" },
+    { icon: <EmojiEvents sx={{ fontSize: 32, color: "warning.main" }} />, value: overall.avgPoints, label: "Avg Points", color: "warning.main" },
+    { icon: <Star sx={{ fontSize: 32, color: "info.main" }} />, value: `${overall.avgRating}/5`, label: "Avg Rating", color: "info.main" },
+    { icon: <Assessment sx={{ fontSize: 32, color: "secondary.main" }} />, value: `${overall.completionRate}%`, label: "Completion Rate", color: "secondary.main" },
+    { icon: <EmojiEvents sx={{ fontSize: 32, color: "success.main" }} />, value: overall.badges.length, label: "Badges Earned", color: "success.main" },
+  ].map((item, i) => (
+    <Grid item xs={6} sm={4} md={2} key={i}>
+      <Card
+        elevation={2}
+        sx={{
+          width: 130,   // smaller width
+          height: 130,  // smaller height
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          mx: "auto",   // keep center aligned
+        }}
+      >
+        {item.icon}
+        <Typography variant="h6" fontWeight="bold" color={item.color || "text.primary"}>
+          {item.value}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {item.label}
+        </Typography>
+      </Card>
+    </Grid>
+  ))}
+</Grid>
 
         {/* Badges Display */}
         {overall.badges.length > 0 && (

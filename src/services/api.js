@@ -42,6 +42,26 @@ const fallbackNotifications = [
   { id: 2, userId: 4, message: "Task deadline approaching", timestamp: new Date(), read: false }
 ];
 
+
+// -------------------- Notifications Replies --------------------
+export const addReply = async (notificationId, reply) => {
+  try {
+    // If your real API supports replies:
+    const res = await API.post(`/notifications/${notificationId}/replies`, reply);
+    return res;
+  } catch {
+    // Fallback: store reply locally
+    const notif = fallbackNotifications.find(n => n.id === notificationId);
+    if (notif) {
+      if (!notif.replies) notif.replies = [];
+      notif.replies.push(reply);
+      return { data: notif };
+    }
+    throw new Error("Notification not found");
+  }
+};
+
+
 // -------------------- Auth --------------------
 export const loginUser = async (email, password) => {
   try {
