@@ -37,89 +37,84 @@ import {
   Campaign,
 } from "@mui/icons-material";
 
-// TabPanel Component
-function TabPanel({ children, value, index, ...other }) {
-  return (
-    <div role="tabpanel" hidden={value !== index} id={`tabpanel-${index}`} aria-labelledby={`tab-${index}`} {...other}>
-      {value === index && <Box sx={{ p: 1 }}>{children}</Box>}
-    </div>
-  );
+// TabPanel
+function TabPanel({ children, value, index }) {
+  return <div hidden={value !== index}>{value === index && <Box sx={{ p: 1 }}>{children}</Box>}</div>;
 }
 
-// Notification List Component
-function NotificationList({ notifications, loading, onMarkRead, getNotificationIcon, getNotificationColor, getTimeAgo }) {
-  if (loading) {
+// Notification List
+function NotificationList({ notifications, loading, onMarkRead, getIcon, getColor, getTimeAgo }) {
+  if (loading)
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
         <CircularProgress />
       </Box>
     );
-  }
 
-  if (!notifications.length) {
+  if (!notifications.length)
     return (
-      <Box sx={{ textAlign: 'center', p: 4 }}>
-        <NotificationsOff sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-        <Typography variant="h6" color="text.secondary">No notifications found</Typography>
+      <Box sx={{ textAlign: "center", py: 4 }}>
+        <NotificationsOff sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
+        <Typography variant="h6" color="text.secondary">
+          No notifications
+        </Typography>
       </Box>
     );
-  }
 
   return (
     <List sx={{ p: 0 }}>
-      {notifications.map((notification, index) => (
-        <Box key={notification.id}>
+      {notifications.map((n, i) => (
+        <Box key={n.id}>
           <ListItem
             sx={{
-              backgroundColor: getNotificationColor(notification.read),
-              borderLeft: notification.read ? '4px solid transparent' : '4px solid',
-              borderLeftColor: notification.read ? 'transparent' : 'primary.main',
-              '&:hover': { backgroundColor: 'action.hover' },
+              flexDirection: "column",
+              alignItems: "flex-start",
+              backgroundColor: getColor(n.read),
+              mb: 1,
+              borderRadius: 2,
+              p: 2,
             }}
           >
-            <ListItemIcon>{getNotificationIcon(notification.message)}</ListItemIcon>
-            <ListItemText
-              primary={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                  {!notification.read && <Circle sx={{ fontSize: 8, color: 'primary.main' }} />}
-                  <Typography
-                    variant="body1"
-                    component="span"
-                    sx={{ fontWeight: notification.read ? 'normal' : 'bold', color: 'text.primary' }}
-                  >
-                    {notification.message}
-                  </Typography>
-                </Box>
-              }
-              secondary={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Chip label={getTimeAgo(notification.timestamp)} size="small" variant="outlined" />
-                  <Typography variant="caption" color="text.secondary">{new Date(notification.timestamp).toLocaleString()}</Typography>
-                </Box>
-              }
-            />
-            <ListItemSecondaryAction>
-              {!notification.read && (
+            <Box sx={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", flex: 1 }}>
+                {!n.read && <Circle sx={{ fontSize: 8, color: "primary.main" }} />}
+                <ListItemIcon sx={{ minWidth: 36 }}>{getIcon(n.message)}</ListItemIcon>
+                <ListItemText
+                  primary={
+                    <Typography variant="body1" sx={{ fontWeight: n.read ? "normal" : "bold", wordBreak: "break-word" }}>
+                      {n.message}
+                    </Typography>
+                  }
+                  secondary={
+                    <Chip
+                      label={getTimeAgo(n.timestamp)}
+                      size="small"
+                      variant="outlined"
+                      sx={{ mt: 0.5, fontSize: "0.75rem" }}
+                    />
+                  }
+                />
+              </Box>
+              {!n.read && (
                 <Button
                   variant="outlined"
                   size="small"
+                  onClick={() => onMarkRead(n.id)}
+                  sx={{ ml: 1, flexShrink: 0 }}
                   startIcon={<MarkEmailRead />}
-                  onClick={() => onMarkRead(notification.id)}
-                  sx={{ padding: '2px 6px' }}
                 >
                   Mark Read
                 </Button>
               )}
-            </ListItemSecondaryAction>
+            </Box>
           </ListItem>
-          {index < notifications.length - 1 && <Divider variant="inset" component="li" />}
         </Box>
       ))}
     </List>
   );
 }
 
-// Main Notifications Component
+// Main Component
 export default function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -135,181 +130,129 @@ export default function Notifications() {
     loadNotifications();
   }, []);
 
+  const showToast = (msg, sev = "success") => {
+    setSnackbarMessage(msg);
+    setSnackbarSeverity(sev);
+    setSnackbarOpen(true);
+  };
+
   const loadNotifications = async () => {
-    if (!userId) {
-      showToast("User not found", "error");
-      return;
-    }
+    if (!userId) return showToast("User not found", "error");
     setLoading(true);
     try {
       const res = await getNotifications();
       const userNotifications = res.data.filter((n) => n.userId === userId);
-      const sortedNotifications = userNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      setNotifications(sortedNotifications);
-    } catch (error) {
-      console.error("Error loading notifications:", error);
+      setNotifications(userNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+    } catch {
       showToast("Error loading notifications", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const showToast = (message, severity = "success") => {
-    setSnackbarMessage(message);
-    setSnackbarSeverity(severity);
-    setSnackbarOpen(true);
-  };
-
   const handleMarkRead = async (id) => {
     try {
       await markNotificationRead(id);
-      showToast("Notification marked as read");
+      showToast("Marked as read");
       loadNotifications();
     } catch {
-      showToast("Error marking notification as read", "error");
+      showToast("Error marking read", "error");
     }
   };
 
-  const getNotificationIcon = (message = "") => {
-    message = message.toLowerCase();
-    if (message.includes("assigned") || message.includes("task")) return <Assignment color="primary" />;
-    if (message.includes("verified") || message.includes("completed")) return <CheckCircle color="success" />;
-    if (message.includes("error") || message.includes("warning")) return <Warning color="warning" />;
+  const getIcon = (msg = "") => {
+    msg = msg.toLowerCase();
+    if (msg.includes("assigned") || msg.includes("task")) return <Assignment color="primary" />;
+    if (msg.includes("verified") || msg.includes("completed")) return <CheckCircle color="success" />;
+    if (msg.includes("error") || msg.includes("warning")) return <Warning color="warning" />;
     return <Info color="info" />;
   };
 
-  const getNotificationColor = (read) => (read ? 'background.paper' : 'action.selected');
+  const getColor = (read) => (read ? "background.paper" : "action.selected");
 
-  const getTimeAgo = (timestamp) => {
-    const now = new Date();
-    const notificationTime = new Date(timestamp);
-    const diffInSeconds = Math.floor((now - notificationTime) / 1000);
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    return notificationTime.toLocaleDateString();
+  const getTimeAgo = (ts) => {
+    const diff = Math.floor((new Date() - new Date(ts)) / 1000);
+    if (diff < 60) return "Just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
   };
 
-  const unreadNotifications = notifications.filter(n => !n.read);
-  const readNotifications = notifications.filter(n => n.read);
+  const unread = notifications.filter((n) => !n.read);
+  const read = notifications.filter((n) => n.read);
 
-  const notificationTabs = [
-    { label: "All", count: notifications.length, icon: <NotificationsIcon /> },
-    { label: "Unread", count: unreadNotifications.length, icon: <NotificationsActive /> },
-    { label: "Read", count: readNotifications.length, icon: <NotificationsOff /> },
+  const tabs = [
+    { label: "All", count: notifications.length },
+    { label: "Unread", count: unread.length },
+    { label: "Read", count: read.length },
   ];
 
   return (
     <>
       <Navbar />
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth="md" sx={{ mt: 3, mb: 3 }}>
         {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Badge badgeContent={unreadNotifications.length} color="error" overlap="circular">
-              <NotificationsIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+        <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: { xs: 2, sm: 0 } }}>
+            <Badge badgeContent={unread.length} color="error">
+              <NotificationsIcon sx={{ fontSize: 36, color: "primary.main" }} />
             </Badge>
             <Box>
-              <Typography variant="h4" component="h1" fontWeight="bold">Notifications</Typography>
-              <Typography variant="h6" color="text.secondary">Stay updated with your task activities</Typography>
+              <Typography variant="h5" fontWeight="bold">
+                Notifications
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Stay updated with your tasks
+              </Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button variant="outlined" startIcon={<Refresh />} onClick={loadNotifications} disabled={loading}>Refresh</Button>
-            {unreadNotifications.length > 0 && (
-              <Button variant="contained" startIcon={<MarkEmailRead />} onClick={() => {}} disabled={loading}>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button variant="outlined" onClick={loadNotifications} disabled={loading}>
+              Refresh
+            </Button>
+            {unread.length > 0 && (
+              <Button variant="contained" onClick={() => unread.forEach(n => handleMarkRead(n.id))}>
                 Mark All Read
               </Button>
             )}
           </Box>
         </Box>
 
-        {/* Stats */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={4}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <NotificationsActive sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-                <Typography variant="h4" fontWeight="bold">{notifications.length}</Typography>
-                <Typography color="text.secondary">Total Notifications</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Campaign sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
-                <Typography variant="h4" fontWeight="bold" color="warning.main">{unreadNotifications.length}</Typography>
-                <Typography color="text.secondary">Unread Notifications</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <CheckCircle sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-                <Typography variant="h4" fontWeight="bold" color="success.main">{readNotifications.length}</Typography>
-                <Typography color="text.secondary">Read Notifications</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
         {/* Tabs */}
         <Card elevation={2}>
-          <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} variant="fullWidth">
-            {notificationTabs.map((tab, index) => (
-              <Tab key={index} label={<Badge badgeContent={tab.count} color={index === 1 ? "error" : "primary"} max={99}><Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>{tab.icon} {tab.label}</Box></Badge>} />
+          <Tabs value={activeTab} onChange={(e, val) => setActiveTab(val)} variant="fullWidth" textColor="primary" indicatorColor="primary">
+            {tabs.map((t, i) => (
+              <Tab key={i} label={<Badge badgeContent={t.count} color="primary">{t.label}</Badge>} />
             ))}
           </Tabs>
 
           <TabPanel value={activeTab} index={0}>
-            <NotificationList
-              notifications={notifications}
-              loading={loading}
-              onMarkRead={handleMarkRead}
-              getNotificationIcon={getNotificationIcon}
-              getNotificationColor={getNotificationColor}
-              getTimeAgo={getTimeAgo}
-            />
+            <NotificationList notifications={notifications} loading={loading} onMarkRead={handleMarkRead} getIcon={getIcon} getColor={getColor} getTimeAgo={getTimeAgo} />
           </TabPanel>
           <TabPanel value={activeTab} index={1}>
-            <NotificationList
-              notifications={unreadNotifications}
-              loading={loading}
-              onMarkRead={handleMarkRead}
-              getNotificationIcon={getNotificationIcon}
-              getNotificationColor={getNotificationColor}
-              getTimeAgo={getTimeAgo}
-            />
+            <NotificationList notifications={unread} loading={loading} onMarkRead={handleMarkRead} getIcon={getIcon} getColor={getColor} getTimeAgo={getTimeAgo} />
           </TabPanel>
           <TabPanel value={activeTab} index={2}>
-            <NotificationList
-              notifications={readNotifications}
-              loading={loading}
-              onMarkRead={handleMarkRead}
-              getNotificationIcon={getNotificationIcon}
-              getNotificationColor={getNotificationColor}
-              getTimeAgo={getTimeAgo}
-            />
+            <NotificationList notifications={read} loading={loading} onMarkRead={handleMarkRead} getIcon={getIcon} getColor={getColor} getTimeAgo={getTimeAgo} />
           </TabPanel>
         </Card>
 
         {/* Empty State */}
         {!loading && notifications.length === 0 && (
-          <Card elevation={2} sx={{ textAlign: 'center', p: 6 }}>
-            <NotificationsOff sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-            <Typography variant="h5" gutterBottom>No Notifications</Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>You're all caught up! New notifications will appear here.</Typography>
-            <Button variant="contained" onClick={loadNotifications}>Check Again</Button>
+          <Card sx={{ textAlign: "center", p: 4, mt: 2 }}>
+            <NotificationsOff sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
+            <Typography variant="h6" color="text.secondary">
+              No Notifications
+            </Typography>
           </Card>
         )}
       </Container>
 
       {/* Snackbar */}
-      <Snackbar open={snackbarOpen} autoHideDuration={4000} onClose={() => setSnackbarOpen(false)} anchorOrigin={{ vertical: "top", horizontal: "center" }}>
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>{snackbarMessage}</Alert>
+      <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={() => setSnackbarOpen(false)}>
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          {snackbarMessage}
+        </Alert>
       </Snackbar>
     </>
   );
