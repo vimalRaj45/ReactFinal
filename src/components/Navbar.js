@@ -6,7 +6,6 @@ import {
   Button,
   Box,
   Link,
-  Breadcrumbs,
   Menu,
   MenuItem,
   Avatar,
@@ -18,9 +17,10 @@ import {
   useScrollTrigger,
   Slide,
   Container,
+  alpha,
 } from "@mui/material";
 import {
-  NavigateNext,
+  NavigateBefore,
   Logout,
   Person,
   Home,
@@ -28,7 +28,7 @@ import {
   Settings,
   Dashboard,
   Menu as MenuIcon,
-  ChevronLeft,
+  KeyboardArrowDown,
   MedicalServices,
 } from "@mui/icons-material";
 import { useState } from "react";
@@ -110,19 +110,31 @@ export default function Navbar() {
       <HideOnScroll>
         <AppBar
           position="sticky"
-          color="primary"
-          elevation={4}
+          elevation={2}
           sx={{
-            background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
-            mb: 2,
+            background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+            backdropFilter: "blur(10px)",
+            borderBottom: "1px solid rgba(255,255,255,0.1)",
+            height: { xs: 60, md: 68 }
           }}
         >
-          <Container maxWidth="xl">
+          <Container maxWidth="xl" sx={{ height: '100%' }}>
             {/* Main Toolbar */}
-            <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }}>
+            <Toolbar 
+              sx={{ 
+                minHeight: '100% !important',
+                height: '100%',
+                px: { xs: 1, sm: 2 }
+              }}
+              disableGutters
+            >
               {/* Logo/Brand */}
               <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
-                <MedicalServices sx={{ mr: 1, fontSize: 32 }} />
+                <MedicalServices sx={{ 
+                  mr: 1.5, 
+                  fontSize: { xs: 26, sm: 28 },
+                  filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+                }} />
                 <Link
                   component={RouterLink}
                   to="/"
@@ -133,25 +145,63 @@ export default function Navbar() {
                     variant="h6"
                     component="div"
                     sx={{
-                      fontWeight: "bold",
+                      fontWeight: 700,
+                      fontSize: { xs: '1.1rem', sm: '1.25rem' },
                       background: "linear-gradient(45deg, #fff 30%, #e3f2fd 90%)",
                       backgroundClip: "text",
                       WebkitBackgroundClip: "text",
                       color: "transparent",
+                      letterSpacing: "-0.5px",
+                      textShadow: "0 2px 4px rgba(0,0,0,0.1)",
                     }}
                   >
-                    Hospital Memo System
+                    Hospital Memo
                   </Typography>
                 </Link>
               </Box>
 
               {/* Desktop Navigation */}
               {user && (
-                <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1 }}>
+                <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.5 }}>
+                  {/* Quick Actions */}
+                  <Button
+                    color="inherit"
+                    onClick={() => navigate(getDashboardRoute())}
+                    sx={{
+                      minWidth: 'auto',
+                      px: 1.5,
+                      borderRadius: 2,
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.15)'
+                      }
+                    }}
+                  >
+                    <Dashboard sx={{ fontSize: 20, mr: 1 }} />
+                    Dashboard
+                  </Button>
+
                   {/* Notifications */}
-                  <IconButton color="inherit" sx={{ mr: 1 }}>
-                    <Badge badgeContent={notificationCount} color="error">
-                      <Notifications />
+                  <IconButton 
+                    color="inherit" 
+                    sx={{ 
+                      mx: 0.5,
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.1)'
+                      }
+                    }}
+                  >
+                    <Badge 
+                      badgeContent={notificationCount} 
+                      color="error"
+                      sx={{
+                        '& .MuiBadge-badge': {
+                          fontSize: '0.7rem',
+                          height: 16,
+                          minWidth: 16,
+                        }
+                      }}
+                    >
+                      <Notifications sx={{ fontSize: 22 }} />
                     </Badge>
                   </IconButton>
 
@@ -165,24 +215,38 @@ export default function Navbar() {
                           width: 32,
                           height: 32,
                           bgcolor: getAvatarColor(user.role),
-                          fontSize: '0.875rem'
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          border: '2px solid rgba(255,255,255,0.3)'
                         }}
                       >
                         {user.name?.charAt(0).toUpperCase()}
                       </Avatar>
                     }
-                    endIcon={<ChevronLeft sx={{ transform: anchorEl ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />}
+                    endIcon={
+                      <KeyboardArrowDown 
+                        sx={{ 
+                          fontSize: 18,
+                          transform: anchorEl ? 'rotate(180deg)' : 'rotate(0deg)', 
+                          transition: 'transform 0.2s ease-in-out' 
+                        }} 
+                      />
+                    }
                     sx={{
-                      borderRadius: 2,
-                      px: 2,
-                      py: 1,
+                      borderRadius: 3,
+                      px: 1.5,
+                      py: 0.75,
+                      ml: 0.5,
                       '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.1)'
+                        backgroundColor: 'rgba(255,255,255,0.15)'
+                      },
+                      '& .MuiButton-startIcon': {
+                        mr: 1
                       }
                     }}
                   >
                     <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                      <Typography variant="subtitle2" sx={{ lineHeight: 1 }}>
+                      <Typography variant="subtitle2" sx={{ lineHeight: 1, fontSize: '0.85rem' }}>
                         {user.name}
                       </Typography>
                       <Chip
@@ -190,7 +254,12 @@ export default function Navbar() {
                         size="small"
                         color={getRoleColor(user.role)}
                         variant="filled"
-                        sx={{ height: 20, fontSize: '0.7rem', mt: 0.5 }}
+                        sx={{ 
+                          height: 18, 
+                          fontSize: '0.65rem', 
+                          mt: 0.25,
+                          fontWeight: 600
+                        }}
                       />
                     </Box>
                   </Button>
@@ -201,26 +270,50 @@ export default function Navbar() {
                     open={Boolean(anchorEl)}
                     onClose={handleClose}
                     TransitionComponent={Fade}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                     PaperProps={{
-                      elevation: 3,
+                      elevation: 4,
                       sx: {
-                        mt: 1.5,
-                        minWidth: 200,
+                        mt: 1,
+                        minWidth: 180,
                         borderRadius: 2,
+                        overflow: 'visible',
+                        '&:before': {
+                          content: '""',
+                          display: 'block',
+                          position: 'absolute',
+                          top: 0,
+                          right: 14,
+                          width: 10,
+                          height: 10,
+                          bgcolor: 'background.paper',
+                          transform: 'translateY(-50%) rotate(45deg)',
+                          zIndex: 0,
+                        }
                       }
                     }}
                   >
-                    <MenuItem onClick={handleClose}>
-                      <Person sx={{ mr: 2 }} />
+                    <MenuItem 
+                      onClick={handleClose}
+                      sx={{ py: 1, fontSize: '0.9rem' }}
+                    >
+                      <Person sx={{ mr: 1.5, fontSize: 20 }} />
                       Profile
                     </MenuItem>
-                    <MenuItem onClick={handleClose}>
-                      <Settings sx={{ mr: 2 }} />
+                    <MenuItem 
+                      onClick={handleClose}
+                      sx={{ py: 1, fontSize: '0.9rem' }}
+                    >
+                      <Settings sx={{ mr: 1.5, fontSize: 20 }} />
                       Settings
                     </MenuItem>
-                    <Divider />
-                    <MenuItem onClick={logout}>
-                      <Logout sx={{ mr: 2 }} />
+                    <Divider sx={{ my: 0.5 }} />
+                    <MenuItem 
+                      onClick={logout}
+                      sx={{ py: 1, fontSize: '0.9rem' }}
+                    >
+                      <Logout sx={{ mr: 1.5, fontSize: 20 }} />
                       Logout
                     </MenuItem>
                   </Menu>
@@ -230,7 +323,15 @@ export default function Navbar() {
               {/* Mobile Menu Button */}
               {user && (
                 <Box sx={{ display: { xs: "flex", md: "none" } }}>
-                  <IconButton color="inherit" onClick={handleMobileMenuOpen}>
+                  <IconButton 
+                    color="inherit" 
+                    onClick={handleMobileMenuOpen}
+                    sx={{
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.1)'
+                      }
+                    }}
+                  >
                     <MenuIcon />
                   </IconButton>
 
@@ -240,60 +341,82 @@ export default function Navbar() {
                     onClose={handleClose}
                     PaperProps={{
                       sx: {
-                        mt: 1.5,
+                        mt: 0.5,
                         minWidth: 200,
                         borderRadius: 2,
                       }
                     }}
                   >
-                    <MenuItem onClick={() => { navigate('/'); handleClose(); }}>
-                      <Home sx={{ mr: 2 }} />
-                      Home
-                    </MenuItem>
-                    <MenuItem onClick={() => { navigate(getDashboardRoute()); handleClose(); }}>
-                      <Dashboard sx={{ mr: 2 }} />
-                      Dashboard
-                    </MenuItem>
+                    <MenuItem 
+        onClick={() => { navigate("/notifications"); handleClose(); }}
+        sx={{ py: 1 }}
+      >
+        <Notifications sx={{ mr: 2, fontSize: 20 }} />
+        Notifications
+        <Badge badgeContent={notificationCount} color="error" sx={{ ml: 'auto' }} />
+      </MenuItem>
                     <Divider />
-                    <MenuItem onClick={logout}>
-                      <Logout sx={{ mr: 2 }} />
+                    <MenuItem 
+                      onClick={logout}
+                      sx={{ py: 1 }}
+                    >
+                      <Logout sx={{ mr: 2, fontSize: 20 }} />
                       Logout
                     </MenuItem>
                   </Menu>
                 </Box>
               )}
             </Toolbar>
-             
-           {/* Breadcrumbs with Back button */}
-{pathnames.length > 0 && (
-  <Box
-    sx={{
-      px: 2,
-      py: 1,
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 1
-    }}
-  >
-    {/* Back button */}
-    <Button
-      onClick={() => window.history.back()}
-      startIcon={<ChevronLeft sx={{ color: 'white' }} />}
-      sx={{ color: 'white', textTransform: 'none' }}
-    >
-      Back
-    </Button>
-
-    {/* Current page */}
-    <Typography sx={{ color: 'white', fontWeight: 'bold' }}>
-      {pathnames[pathnames.length - 1].charAt(0).toUpperCase() + pathnames[pathnames.length - 1].slice(1)}
-    </Typography>
-  </Box>
-)}
-
           </Container>
+
+          {/* Breadcrumbs Section */}
+          {pathnames.length > 0 && (
+            <Box
+              sx={{
+                px: { xs: 2, sm: 3 },
+                py: 1,
+                backgroundColor: '#62c5ecff',
+                borderTop: '1px solid rgba(255,255,255,0.05)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                minHeight: 40
+              }}
+            >
+              {/* Back button */}
+              <Button
+                onClick={() => window.history.back()}
+                startIcon={<NavigateBefore sx={{ color: 'white' }} />}
+                sx={{ 
+                  color: 'white', 
+                  textTransform: 'none',
+                  fontSize: '0.875rem',
+                  px: 1.5,
+                  py: 0.5,
+                  minWidth: 'auto',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.1)'
+                  }
+                }}
+              >
+                Back
+              </Button>
+
+              <Divider orientation="vertical" flexItem sx={{ backgroundColor: 'rgba(255,255,255,0.3)' }} />
+
+              {/* Current page */}
+              <Typography 
+                sx={{ 
+                  color: 'white', 
+                  fontWeight: 500,
+                  fontSize: '0.9rem',
+                  textTransform: 'capitalize'
+                }}
+              >
+                {pathnames[pathnames.length - 1].replace(/-/g, ' ')}
+              </Typography>
+            </Box>
+          )}
         </AppBar>
       </HideOnScroll>
     </>
